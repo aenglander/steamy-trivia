@@ -1,6 +1,7 @@
-from base64 import b64decode
 from enum import Enum, IntEnum
+from html import unescape
 from typing import NamedTuple, Set, Dict, Union, Any, List
+from urllib.parse import unquote
 
 import requests
 
@@ -87,7 +88,7 @@ class Client:
                       difficulty: Difficulty = Difficulty.MEDIUM,
                       limit: int = 10) -> List[Question]:
         params = {"difficulty": difficulty.value, "amount": limit,
-                  "encoding": "base64"}
+                  "encoding": "url3986"}
         if category:
             params["category"] = category
         response = self.__api_request("/api.php", params)
@@ -138,15 +139,21 @@ class Client:
 
         return response_data
 
-    def __decode(self, response_data: Dict[str, Any]) -> Dict[str, Any]:
-        decoded = {}
-        for key, value in response_data.items():
-            if isinstance(value, dict):
-                decoded_value = self.__decode(value)
-            elif isinstance(value, str) and key != "response_message":
-                decoded_value = b64decode(value)
-            else:
-                decoded_value = value
-            decoded[key] = decoded_value
+    def __decode(self, encoded: Any) -> Dict[str, Any]:
+        if isinstance(encoded, dict):
+            decoded = {}
+            for key, encoded_value in encoded.items():
+                if key == "response_message":
+                    decoded[key] = encoded_value
+                else:
+                    decoded[key] = self.__decode(encoded_value)
+        elif isinstance(encoded, List):
+            decoded = []
+            for encoded_item in encoded:
+                decoded.append(self.__decode(encoded_item))
+        elif isinstance(encoded, str):
+            decoded = unescape(unquote(encoded))
+        else:
+            decoded = encoded
 
         return decoded

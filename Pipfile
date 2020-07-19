@@ -3,13 +3,8 @@ name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
-[dev-packages]
-steamy-trivia = {editable = true, path = "."}
-
 [packages]
-click = "~=7.1"
-requests = "~=2.24"
-cffi = "~=1.14"
+steamy-trivia = {editable = true, path = "."}
 
 [requires]
 python_version = "3.6"
